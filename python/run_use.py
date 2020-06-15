@@ -14,10 +14,11 @@ import math
 def main():
     # print(pyarrow.array(np.arange(0,10, 0.1).tolist()).type)
     data_dir = PosixPath("~/recsys2020").expanduser()
-    input_file = data_dir / "training1m.parquet"
-    output_file = data_dir / "training1m_stage1.parquet"
+    ds_name = "competition_test"
+    input_file = data_dir / f"{ds_name}.parquet"
+    output_file = data_dir / f"{ds_name}_stage1.parquet"
 
-    if output_file.is_dir:
+    if output_file.exists():
         shutil.rmtree(output_file)
 
     output_file.mkdir()
@@ -31,7 +32,6 @@ def main():
     with torch.no_grad():
         model = DistilBertModel.from_pretrained('distilbert-base-multilingual-cased').to(d)
         calc_embeddings = model.get_input_embeddings()
-
 
         for partition_file in input_file.glob("*.parquet"):
             print(f"Processing {partition_file.name}")
@@ -57,7 +57,6 @@ def main():
                     # result_embeddings.append(outputs)
                     p.update(len(int_col))
             table["embeddings"] = pd.Series(res)
-            print(table.columns)
             table.columns = table.columns.astype(str)
             table.to_parquet(output_file / partition_file.name)
 
