@@ -15,15 +15,21 @@ import torch.multiprocessing as mp
 def main():
     # print(pyarrow.array(np.arange(0,10, 0.1).tolist()).type)
     data_dir = PosixPath("~/recsys2020").expanduser()
-    ds_name = "training1m"
+    ds_name = "val10k"
     input_file = data_dir / f"{ds_name}.parquet"
     output_file = data_dir / f"{ds_name}_stage1.parquet"
-    partition_files = list(input_file.glob("*.parquet"))
-
+    partition_filenames = set(i.name for i in input_file.glob("*.parquet"))
     if output_file.exists():
-        shutil.rmtree(output_file)
+        output_filenames = set(i.name for i in output_file.glob("*.parquet"))
+        if output_filenames:
+            print(f"Found {len(output_filenames)} existing output files, skipping them")
+        partition_filenames -= output_filenames
+    else:
+        output_file.mkdir()
 
-    output_file.mkdir()
+    # if output_file.exists():
+    #     shutil.rmtree(output_file)
+
 
     arch = 'distilbert'
     # arch = 'bert'
@@ -31,7 +37,7 @@ def main():
     d = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     max_token_len = 600
 
-    with tqdm.tqdm(total=len(partition_files), position=1) as pp:
+    with tqdm.tqdm(total=len(partition_filenames), position=1) as pp:
         with torch.no_grad():
             if arch == 'distilbert':
                 model = DistilBertModel.from_pretrained('distilbert-base-multilingual-cased', output_hidden_states=True)
@@ -39,13 +45,13 @@ def main():
                 model = BertModel.from_pretrained('bert-base-multilingual-cased', output_hidden_states=True)
             model = model.eval().to(d)
 
-            for partition_file in partition_files:
-                # print(f"Processing {partition_file.name}")
+            for partition_filename in partition_filenames:
+                partition_file = input_file / partition_filename
                 table = pd.read_parquet(partition_file)
 
                 res = []
                 num_rows = table.shape[0]
-                batch_size = 50
+                batch_size = 20
                 num_batches = int(math.ceil(num_rows / batch_size))
                 with tqdm.tqdm(total=num_rows, position=0) as p:
                     for b_idx in range(num_batches):
@@ -69,7 +75,7 @@ def main():
                         p.update(len(int_col))
                 table["embeddings"] = pd.Series(res)
                 table.columns = table.columns.astype(str)
-                table.to_parquet(output_file / partition_file.name)
+                table.to_parquet(output_file / partition_filename)
                 pp.update(1)
 
 
