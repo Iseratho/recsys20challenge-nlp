@@ -15,10 +15,17 @@ Sample training data using `dataset_sampling.ipynb`.
 
 ## 1. Preprocess Data
 
-Transform all tsv files with `preprocessing_polynote_scala.ipynb`.  
-Afterwards load the embeddings with `python/run_use.py`.  
+Transform all tsv files with `preprocessing.ipynb`.  
 
-## 2. Fit Model and Predict
+## 2. Compute Embeddings
 
-Fit the training data using `train_pipeline_stage2.ipynb`.  
-Run the prediction on the validation/test data using `run_pipeline_stage2.ipynb`.  
+1. Create a virtualenv using Python 3.8.
+2. Navigate to the `python` subdirectory.
+3. Install all dependencies: `pip install -r requirements.txt`.
+4. Edit `compute_embeddings.py` to configure the input dataset.
+5. Run `compute_embeddings.py` within your virtualenv.
+
+## 2. Train and Run Classifier
+
+Fit the training data using `train_classifier.ipynb`.  
+Run the prediction on the validation/test data using `run_classifier.ipynb`.  

@@ -15,10 +15,12 @@ import torch.multiprocessing as mp
 def main():
     # print(pyarrow.array(np.arange(0,10, 0.1).tolist()).type)
     data_dir = PosixPath("~/recsys2020").expanduser()
-    ds_name = "val10k"
+    ds_name = "training1m"
     input_file = data_dir / f"{ds_name}.parquet"
-    output_file = data_dir / f"{ds_name}_stage1.parquet"
+    output_file = data_dir / f"{ds_name}_stage1_benchmark.parquet"
     partition_filenames = set(i.name for i in input_file.glob("*.parquet"))
+    # if output_file.exists():
+    #     shutil.rmtree(output_file)
     if output_file.exists():
         output_filenames = set(i.name for i in output_file.glob("*.parquet"))
         if output_filenames:
@@ -26,10 +28,6 @@ def main():
         partition_filenames -= output_filenames
     else:
         output_file.mkdir()
-
-    # if output_file.exists():
-    #     shutil.rmtree(output_file)
-
 
     arch = 'distilbert'
     # arch = 'bert'
