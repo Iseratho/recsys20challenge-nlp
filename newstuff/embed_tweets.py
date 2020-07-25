@@ -8,16 +8,19 @@ import torch
 import tqdm
 import shutil
 import pandas as pd
+import dask
 import dask.array as da
 import dask.dataframe as dd
 import math
 import torch.multiprocessing as mp
 
 max_token_len = 600
+arch = 'distilbert'
+# arch = 'bert'
 
 def embed_partition(df: dd.DataFrame,d, model) -> dd.DataFrame:
     num_rows = df.shape[0]
-    batch_size = 20
+    batch_size = 4
     num_batches = int(math.ceil(num_rows / batch_size))
     res = []
     with tqdm.tqdm(total=num_rows, position=0) as p:
@@ -44,25 +47,24 @@ def embed_partition(df: dd.DataFrame,d, model) -> dd.DataFrame:
     return df
 
 def main():
-    data_dir = PosixPath("~/recsys2020").expanduser()
-    ds_name = "training"
-    input_file = data_dir / f"{ds_name}.parquet/"
-    output_file = data_dir / f"{ds_name}_embeddings.parquet/"
-    df = dd.read_parquet(str(input_file))
+    with dask.config.set(scheduler='synchronous'):
+        data_dir = PosixPath("~/recsys2020").expanduser()
+        ds_name = "user_sampled"
+        input_file = data_dir / f"{ds_name}.parquet/"
+        output_file = data_dir / f"{ds_name}_embeddings.parquet/"
+        df = dd.read_parquet(str(input_file))
 
-    dummy_frame = pd.DataFrame({'tokens': np.array([1, 2, 3])})
+        dummy_frame = pd.DataFrame({'tokens': np.array([1, 2, 3])})
+        d = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    arch = 'distilbert'
-    # arch = 'bert'
-    d = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    with torch.no_grad():
-        if arch == 'distilbert':
-            model = DistilBertModel.from_pretrained('distilbert-base-multilingual-cased', output_hidden_states=True)
-        elif arch == 'bert':
-            model = BertModel.from_pretrained('bert-base-multilingual-cased', output_hidden_states=True)
-        model = model.eval().to(d)
-        df.map_partitions(embed_partition, d=d, model=model, meta=dummy_frame).compute()
+        with torch.no_grad():
+            if arch == 'distilbert':
+                model = DistilBertModel.from_pretrained('distilbert-base-multilingual-cased', output_hidden_states=True)
+            elif arch == 'bert':
+                model = BertModel.from_pretrained('bert-base-multilingual-cased', output_hidden_states=True)
+            model = model.eval().to(d)
+            df.map_partitions(embed_partition, d=d, model=model, meta=dummy_frame)
+            df.to_parquet(output_file)
 
 if __name__ == "__main__":
     main()
