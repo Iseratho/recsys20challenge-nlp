@@ -43,7 +43,7 @@ def embed_partition(df: dd.DataFrame,d, model) -> dd.DataFrame:
                     ).float().cpu()
             res.extend(outputs[i].numpy() for i in range(outputs.shape[0]))
             p.update(len(int_col))
-    df["embeddings"] = pd.Series(res)
+    df.loc[:, "embeddings"] = pd.Series(res)
     return df
 
 def main():
@@ -54,7 +54,12 @@ def main():
         output_file = data_dir / f"{ds_name}_embeddings.parquet/"
         df = dd.read_parquet(str(input_file))
 
-        dummy_frame = pd.DataFrame({'tokens': np.array([1, 2, 3])})
+        meta = {
+            'user_id': str,
+            'tweet_id': str,
+            'tokens': object,
+            'embeddings': object
+        }
         d = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         with torch.no_grad():
@@ -63,7 +68,8 @@ def main():
             elif arch == 'bert':
                 model = BertModel.from_pretrained('bert-base-multilingual-cased', output_hidden_states=True)
             model = model.eval().to(d)
-            df.map_partitions(embed_partition, d=d, model=model, meta=dummy_frame)
+            df = df[['user_id', 'tweet_id', 'tokens']].map_partitions(embed_partition, d=d, model=model, meta=meta)
+            del df['tokens']
             df.to_parquet(output_file)
 
 if __name__ == "__main__":
