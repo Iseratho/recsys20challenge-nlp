@@ -25,6 +25,10 @@ Afterwards load the embeddings with `challenge/compute_embeddings.py`.
 Fit the training data using `challenge/train_pipeline_stage2.ipynb`.  
 Run the prediction on the validation/test data using `challenge/run_pipeline_stage2.ipynb`.  
 
+## Post Challenge approaches
+
+The post challenge approaches are found in the `postchallenge` directory and require the same preprocessed parquet file as input.
+
 ## Folder structure
 
 This repo contains 3 subdirectories:
