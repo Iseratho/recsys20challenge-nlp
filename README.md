@@ -9,16 +9,27 @@ Prequisites:
 
 Note that you need to configure spark using the polynote configurations.
 
-## 0. Sample Training Data (optional)
+## Running the challenge approach
 
-Sample training data using `dataset_sampling.ipynb`.
+### 0. Sample Training Data (optional)
 
-## 1. Preprocess Data
+Sample training data using `challenge/dataset_sampling.ipynb`.
+
+### 1. Preprocess Data
 
 Transform all tsv files with `preprocessing_polynote_scala.ipynb`.  
-Afterwards load the embeddings with `python/run_use.py`.  
+Afterwards load the embeddings with `challenge/compute_embeddings.py`.  
 
-## 2. Fit Model and Predict
+### 2. Fit Model and Predict
 
-Fit the training data using `train_pipeline_stage2.ipynb`.  
-Run the prediction on the validation/test data using `run_pipeline_stage2.ipynb`.  
+Fit the training data using `challenge/train_pipeline_stage2.ipynb`.  
+Run the prediction on the validation/test data using `challenge/run_pipeline_stage2.ipynb`.  
+
+## Folder structure
+
+This repo contains 3 subdirectories:
+- challenge for experiments conducted for the RecSys20 challenge using mainly Spark and Scala
+- postchallenge for additional experiments after the challenge using mainly Dask and Python
+- experimental several experimental notebooks, which are not relevant for the results
+
+Additionally, there are several preprocessing notebooks that are relevant for both the challenge and postchallenge experiments.
